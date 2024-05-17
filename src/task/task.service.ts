@@ -17,7 +17,7 @@ export class TaskService {
     private readonly authService: AuthService,
   ) {}
 
-  public async getTask(taskId: number, userId: number): Promise<Task> {
+  public async getTask(taskId: number, userId: number): Promise<Task | null> {
     const task = await this.taskRepo.getTask(taskId, userId);
 
     return task;
@@ -49,7 +49,7 @@ export class TaskService {
   }
 
   public async deleteTask(taskId: number, userId: number): Promise<boolean> {
-    const taskDeleted: boolean = await this.deleteTask(taskId, userId);
+    const taskDeleted: boolean = await this.taskRepo.deleteTask(taskId, userId);
 
     return taskDeleted;
   }

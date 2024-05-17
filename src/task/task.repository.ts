@@ -4,8 +4,6 @@ import { CreateTaskDto, UpdateTaskDto, TaskQueryDto } from './dto/task.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { TaskNotFoundException } from '../exceptions/notFound.exception';
-
 import { PagedTaskDto } from '../utils/types';
 import getPaginationOffset from '../utils/pagination';
 
@@ -20,8 +18,8 @@ export class TaskRepository {
     private userRepo: UserRepository,
   ) {}
 
-  public async getTask(taskId: number, userId: number): Promise<Task> {
-    return (await this.getTaskEntity(taskId, userId)) as Task;
+  public async getTask(taskId: number, userId: number): Promise<Task | null> {
+    return await this.getTaskEntity(taskId, userId);
   }
 
   /**
@@ -101,7 +99,11 @@ export class TaskRepository {
   }
 
   public async deleteTask(taskId: number, userId: number) {
-    (await this.getTaskEntity(taskId, userId)) as Task;
+    const taskExists = await this.getTaskEntity(taskId, userId);
+
+    if (!taskExists) {
+      return false;
+    }
 
     try {
       await this.repo
@@ -120,16 +122,12 @@ export class TaskRepository {
   private async getTaskEntity(
     taskId: number,
     userId: number,
-  ): Promise<Task | void> {
+  ): Promise<Task | null> {
     try {
       const task = await this.repo.findOne({
         where: { id: taskId, userId: userId },
         relations: { user: true },
       });
-
-      if (!task) {
-        throw new TaskNotFoundException(taskId);
-      }
 
       return task;
     } catch (error) {

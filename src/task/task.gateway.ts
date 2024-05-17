@@ -11,7 +11,12 @@ import { TaskService } from './task.service';
 import { Socket, Server } from 'socket.io';
 import { CreateTaskDto, TaskQueryDto, UpdateTaskDto } from './dto/task.dto';
 
-import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  ParseIntPipe,
+  UseFilters,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { WebsocketExceptionsFilter } from './task.exception';
 
 /**
@@ -69,13 +74,16 @@ export class TaskGateway implements OnGatewayConnection {
    */
   @SubscribeMessage('readTask')
   async readTask(
-    @MessageBody('taskId') taskId: number,
+    @MessageBody('taskId', ParseIntPipe) taskId: number,
     @ConnectedSocket() clientSocket: Socket,
   ) {
     const user = await this.taskService.getUserFromSocket(clientSocket);
 
     const task = await this.taskService.getTask(taskId, user!.id);
-    clientSocket.emit('readTask', { ...task });
+
+    const data = task ?? { message: `Task with id ${taskId}, was not found` };
+
+    clientSocket.emit('readTask', { ...data });
   }
 
   /**
@@ -131,14 +139,20 @@ export class TaskGateway implements OnGatewayConnection {
    */
   @SubscribeMessage('deleteTask')
   async deleteTask(
-    @MessageBody('taskId') taskId: number,
+    @MessageBody('taskId', ParseIntPipe) taskId: number,
     @ConnectedSocket() clientSocket: Socket,
   ) {
     const user = await this.taskService.getUserFromSocket(clientSocket);
 
-    await this.taskService.deleteTask(taskId, user!.id);
+    const taskDeleted = await this.taskService.deleteTask(taskId, user!.id);
 
-    clientSocket.emit('deleteTask', { message: 'Task deleted successfully' });
+    console.log(taskDeleted);
+
+    const deleteMessage = taskDeleted
+      ? 'Task deleted successfully'
+      : `Task with id ${taskId}, was not found`;
+
+    clientSocket.emit('deleteTask', { message: deleteMessage });
 
     const tasks = await this.taskService.getPagedUserTasks(user!.id, {
       pageNumber: 1,
