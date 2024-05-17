@@ -28,5 +28,7 @@ async function bootstrap() {
   const port = configService.get('PORT') || 3001;
 
   await app.listen(port);
+
+  console.log(`Server and socket are now listening on ports ${port} and 3002`);
 }
 bootstrap();

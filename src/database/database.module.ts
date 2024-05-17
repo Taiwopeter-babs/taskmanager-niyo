@@ -22,6 +22,7 @@ import User from '../user/user.entity';
         // NestJs autoLoadEntities didn't work. entities had to be specified
         entities: [User, Task],
         migrations: ['./migrations/*.ts'],
+        migrationsTableName: 'niyo_migrations',
       }),
     }),
   ],

@@ -5,11 +5,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { UserAlreadyExistsException } from '../exceptions/badRequest.exception';
-import { UserNotFoundException } from '../exceptions/notFound.exception';
 
 import Mapper from '../utils/mapper';
 import { IPagination, PagedUserDto } from '../utils/types';
 import getPaginationOffset from '../utils/pagination';
+import { ServerErrorException } from '../exceptions/server.exception';
 
 @Injectable()
 export class UserRepository {
@@ -18,8 +18,8 @@ export class UserRepository {
     private repo: Repository<User>,
   ) {}
 
-  public async getUser(userId: number): Promise<User> {
-    return (await this.getUserEntity(userId)) as User;
+  public async getUser(userId: number): Promise<User | null> {
+    return (await this.getUserEntity(userId)) as User | null;
   }
 
   public async getPagedUsers(
@@ -59,20 +59,16 @@ export class UserRepository {
     }
   }
 
-  public async getUserByEmail(email: string): Promise<User | void> {
+  public async getUserByEmail(email: string): Promise<User | null> {
     try {
       const user = await this.repo.findOne({
         where: { email: email.toLowerCase() },
         relations: { tasks: false },
       });
 
-      if (!user) {
-        throw new UserNotFoundException(email);
-      }
-
       return user;
     } catch (error) {
-      throw error;
+      throw new ServerErrorException();
     }
   }
 
@@ -142,20 +138,16 @@ export class UserRepository {
     }
   }
 
-  private async getUserEntity(userId: number): Promise<User | void> {
+  private async getUserEntity(userId: number): Promise<User | null> {
     try {
       const user = await this.repo.findOne({
         where: { id: userId },
         relations: { tasks: true },
       });
 
-      if (!user) {
-        throw new UserNotFoundException(userId);
-      }
-
       return user;
     } catch (error) {
-      throw error;
+      throw new ServerErrorException();
     }
   }
 }

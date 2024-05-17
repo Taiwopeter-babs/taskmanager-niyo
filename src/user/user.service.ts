@@ -17,14 +17,16 @@ export class UserService {
     return (await this.repo.getPagedUsers(pageParams)) as PagedUserDto;
   }
 
-  public async getUser(userId: number): Promise<UserDto> {
-    const user = (await this.repo.getUser(userId)) as User;
+  public async getUser(userId: number): Promise<UserDto | null> {
+    const user = await this.repo.getUser(userId);
     console.log(user);
-    return Mapper.toUserDto(user, true);
+    return user ? Mapper.toUserDto(user, true) : null;
   }
 
-  public async getUserByEmail(email: string): Promise<UserDto> {
-    return (await this.repo.getUserByEmail(email)) as User;
+  public async getUserByEmail(email: string): Promise<UserDto | null> {
+    const user = (await this.repo.getUserByEmail(email)) as User | null;
+
+    return user ? Mapper.toUserDto(user, true) : null;
   }
 
   public async createUser(user: CreateUserDto) {

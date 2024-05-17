@@ -32,7 +32,9 @@ export class CreateTaskDto extends BaseTaskDto {
 
 /** Dto for task update. All properties are optional */
 export class UpdateTaskDto extends PartialType(BaseTaskDto) {
-  public isCompleted?: boolean;
+  @IsOptional()
+  @IsEnum(TaskStatus)
+  public isCompleted?: TaskStatus;
 }
 
 /** Dto for task query parameters. All properties are optional */
@@ -60,7 +62,7 @@ export class TaskDto {
 
   public userId: number;
 
-  public isCompleted?: boolean;
+  public isCompleted?: TaskStatus;
 
   public author: User;
 }

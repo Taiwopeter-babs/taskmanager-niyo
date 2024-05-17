@@ -19,20 +19,23 @@ export class TaskRepository {
     private userRepo: UserRepository,
   ) {}
 
-  public async getTask(userId: number, taskId: number): Promise<Task> {
+  public async getTask(taskId: number, userId: number): Promise<Task> {
     return (await this.getTaskEntity(taskId, userId)) as Task;
   }
 
+  /**
+   * Get tasks created by a user by page
+   */
   public async getUserPagedTasks(
     userId: number,
-    taskQueryParams: TaskQueryDto,
+    pageParams: TaskQueryDto,
   ): Promise<PagedTaskDto | void> {
     try {
-      const pageOffset = getPaginationOffset(taskQueryParams);
+      const pageOffset = getPaginationOffset(pageParams);
 
       const paginationOptions = this.getPaginationOptions(
         userId,
-        taskQueryParams,
+        pageParams,
         pageOffset,
       );
 
@@ -43,16 +46,16 @@ export class TaskRepository {
         this.repo.find({ ...paginationOptions }),
       ]);
 
-      const totalPages = Math.ceil(itemsCount / taskQueryParams.pageSize);
+      const totalPages = Math.ceil(itemsCount / pageParams.pageSize);
 
       const data: PagedTaskDto = {
         tasks: tasks,
-        currentPage: taskQueryParams.pageNumber,
-        pageSize: taskQueryParams.pageSize,
+        currentPage: pageParams.pageNumber,
+        pageSize: pageParams.pageSize,
         totalPages: totalPages,
         totalItems: itemsCount,
-        hasNext: taskQueryParams.pageNumber < totalPages,
-        hasPrevious: taskQueryParams.pageNumber > 1,
+        hasNext: pageParams.pageNumber < totalPages,
+        hasPrevious: pageParams.pageNumber > 1,
       };
 
       return data;
@@ -61,8 +64,9 @@ export class TaskRepository {
     }
   }
 
-  public async createTask(task: CreateTaskDto, userId: number) {
+  public async createTask(task: CreateTaskDto) {
     try {
+      const { userId } = task;
       const user = await this.userRepo.getUser(userId);
 
       const newTask = this.repo.create({ ...task, user });
@@ -86,9 +90,9 @@ export class TaskRepository {
         isCompleted: data.isCompleted,
       } as unknown as Task;
 
-      await this.repo.update(taskId, { ...updateData });
+      const updatedTask = await this.repo.update(taskId, { ...updateData });
 
-      return true;
+      return updatedTask;
     } catch (error) {
       throw error;
     }

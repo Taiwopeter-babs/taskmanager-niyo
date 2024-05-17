@@ -12,6 +12,8 @@ import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ITokenPayload } from '../utils/types';
 
 import { ServerErrorException } from '../exceptions/server.exception';
+import { UserDto } from '../user/dto/user.dto';
+import { UserNotFoundException } from '../exceptions/notFound.exception';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +25,14 @@ export class AuthService {
 
   /** salt rounds to hash password with */
   private saltRounds = 10;
+
+  private readonly jwtSecret = this.configService.get<string>(
+    'JWT_SECRET',
+  ) as string;
+
+  private readonly jwtValidTime = this.configService.get(
+    'JWT_VALID_TIME',
+  ) as string;
 
   public async validateUser(email: string, password: string) {
     try {
@@ -45,11 +55,36 @@ export class AuthService {
     }
   }
 
-  public async getJwtData(email: string): Promise<User | undefined> {
+  public async getJwtData(email: string): Promise<UserDto | undefined> {
     try {
-      const user = (await this.userService.getUserByEmail(email)) as User;
+      const user = await this.userService.getUserByEmail(email);
+
+      if (!user) {
+        throw new UserNotFoundException(email);
+      }
 
       return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /** Verifies a JWT and returns the user.
+   * Throws a web socket error if token is invalid or user is not found
+   */
+  public async verifyTokenForSocket(token: string): Promise<UserDto | null> {
+    try {
+      const jwtValidTimeNumber = parseInt(this.jwtValidTime, 10) * 1000; // milliseconds
+
+      const payload: ITokenPayload = await this.jwtService.verifyAsync(token, {
+        secret: this.jwtSecret,
+        ignoreExpiration: false,
+        maxAge: jwtValidTimeNumber,
+      });
+
+      const { email } = payload;
+
+      return await this.userService.getUserByEmail(email);
     } catch (error) {
       throw error;
     }
@@ -58,18 +93,17 @@ export class AuthService {
   /**
    * Signs and returns an access token and cookie options for session
    */
-  public async loginUser(user: User) {
+  public async getUserloginToken(user: User) {
     const payload: ITokenPayload = {
       email: user.email,
       sub: user.id,
     };
 
-    const validTime = this.configService.get('JWT_VALID_TIME') as string;
-    const jwtSecret = this.configService.get<string>('JWT_SECRET');
+    const jwtValidTimeNumber = parseInt(this.jwtValidTime, 10);
 
     const jwtSignOptions: JwtSignOptions = {
-      expiresIn: parseInt(validTime, 10),
-      secret: jwtSecret,
+      expiresIn: jwtValidTimeNumber,
+      secret: this.jwtSecret,
     };
 
     const accessToken = await this.jwtService.signAsync(
@@ -78,7 +112,7 @@ export class AuthService {
     );
 
     const cookieOptions: CookieOptions = {
-      maxAge: parseInt(validTime, 10) * 1000, // milliseconds
+      maxAge: jwtValidTimeNumber * 1000, // milliseconds
       httpOnly: true,
     };
 

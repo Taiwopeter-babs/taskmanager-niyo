@@ -15,7 +15,7 @@ const CONFIG = {
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_VALID_TIME: process.env.JWT_VALID_TIME,
   NODE_ENV: process.env.NODE_ENV as 'development' | 'production',
-  PORT: parseInt(process.env.PORT as string, 10) || 3002,
+  PORT: parseInt(process.env.PORT as string, 10) || 3001,
 };
 
 export default (): Record<string, any> => ({

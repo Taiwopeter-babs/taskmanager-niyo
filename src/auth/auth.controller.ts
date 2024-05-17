@@ -30,9 +30,11 @@ export class AuthController {
     // object comes from authentication strategy: UserAuthStrategy
     const user = request.user as User;
 
-    const [cookieOptions, accessToken] = (await this.authService.loginUser(
-      user,
-    )) as [CookieOptions, string];
+    const [cookieOptions, accessToken] =
+      (await this.authService.getUserloginToken(user)) as [
+        CookieOptions,
+        string,
+      ];
 
     // set payload for cookie
     response.cookie(constants.cookieName, accessToken, cookieOptions);
