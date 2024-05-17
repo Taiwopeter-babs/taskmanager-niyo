@@ -22,7 +22,7 @@ import { WebsocketExceptionsFilter } from './task.exception';
 /**
  * A web socket gateway class for `Tasks` CRUD operations
  */
-@WebSocketGateway(3002, { namespace: 'api/sockets' })
+@WebSocketGateway({ namespace: 'api/sockets' })
 @UseFilters(WebsocketExceptionsFilter) // filter exceptions
 @UsePipes(new ValidationPipe({ transform: true }))
 export class TaskGateway implements OnGatewayConnection {
