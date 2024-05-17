@@ -4,10 +4,8 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpStatus,
   Param,
   ParseIntPipe,
-  Post,
   Put,
   UseGuards,
 } from '@nestjs/common';
@@ -15,24 +13,13 @@ import {
 import { UserService } from './user.service';
 
 import { JwtAuthGuard } from '../auth/guards/auth.guard';
-import { CreateUserDto, UpdateUserDto, UserDto } from './dto/user.dto';
 
 import { UserNotFoundException } from '../exceptions/notFound.exception';
+import { UpdateUserDto } from './dto/user.dto';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
-  @Post()
-  public async AddUser(@Body() createUserDto: CreateUserDto) {
-    const user = (await this.userService.createUser(createUserDto)) as UserDto;
-
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Registration successful',
-      ...user,
-    };
-  }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)

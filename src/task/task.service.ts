@@ -5,11 +5,10 @@ import { TaskRepository } from './task.repository';
 import Task from './task.entity';
 import { CreateTaskDto, TaskQueryDto, UpdateTaskDto } from './dto/task.dto';
 
-import { Socket } from 'socket.io';
-import { parse } from 'cookie';
-import { WsException } from '@nestjs/websockets';
 import { UpdateResult } from 'typeorm';
 import { PagedTaskDto } from '../utils/types';
+import { Socket } from 'socket.io';
+import constants from '../auth/constants';
 
 @Injectable()
 export class TaskService {
@@ -44,7 +43,7 @@ export class TaskService {
     userId: number,
     data: UpdateTaskDto,
   ): Promise<UpdateResult> {
-    const updatedTask = await this.updateTask(taskId, userId, data);
+    const updatedTask = await this.taskRepo.updateTask(taskId, userId, data);
 
     return updatedTask;
   }
@@ -56,22 +55,37 @@ export class TaskService {
   }
 
   public async getUserFromSocket(socket: Socket) {
-    const cookie = socket.request.headers.cookie;
+    const cookieString = socket.handshake.headers.cookie;
 
-    if (!cookie) {
-      throw new WsException('Unauthorized access');
+    const accessToken = this.parseCookie(cookieString);
+
+    if (!accessToken) {
+      return null;
+    }
+
+    return await this.authService.verifyTokenForSocket(accessToken!);
+  }
+
+  private parseCookie(cookieString: string | undefined) {
+    if (!cookieString) {
+      return null;
     }
 
     // 'authenticationNiyo' is the name of the cookie.
     /** @see {@link AuthService.getUserloginToken}  */
-    const { authenticationNiyo: authenticationToken } = parse(cookie);
-
-    const user =
-      await this.authService.verifyTokenForSocket(authenticationToken);
-
-    if (!user) {
-      throw new WsException('Invalid credentials.');
+    // only one cookie in the header
+    if (!cookieString.includes(';')) {
+      return cookieString.includes(constants.cookieName)
+        ? cookieString.split('=')[1]
+        : null;
     }
-    return user;
+
+    // multiple cookies in header
+    const accessToken = cookieString
+      .split('; ')
+      .find((cookie: string) => cookie.startsWith(constants.cookieName))
+      ?.split('=')[1];
+
+    return accessToken;
   }
 }

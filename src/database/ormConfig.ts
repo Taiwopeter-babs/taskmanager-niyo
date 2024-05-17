@@ -17,6 +17,7 @@ const dataSource: DataSource = new DataSource({
   entities: [User, Task],
   // Synchronize database schema with entities
   synchronize: configuration().NODE_ENV === 'development',
+  // synchronize: false,
   migrations: ['./migrations/*.ts'],
   migrationsTableName: 'niyo_migrations',
 });

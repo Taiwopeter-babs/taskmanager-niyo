@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   HttpCode,
   HttpStatus,
@@ -11,15 +12,32 @@ import { CookieOptions, Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
 import { JwtAuthGuard, UserAuthGuard } from './guards/auth.guard';
-import User from 'src/user/user.entity';
+import User from '../user/user.entity';
 import constants from './constants';
 
 import Mapper from '../utils/mapper';
+import { CreateUserDto, UserDto } from '../user/dto/user.dto';
+import { UserService } from '../user/user.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
+  @Post('/users/register')
+  public async AddUser(@Body() createUserDto: CreateUserDto) {
+    const user = (await this.authService.registerUser(
+      createUserDto,
+    )) as UserDto;
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Registration successful',
+      ...user,
+    };
+  }
   @HttpCode(200)
   @UseGuards(UserAuthGuard)
   @Post('users/login')

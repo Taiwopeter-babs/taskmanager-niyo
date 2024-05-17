@@ -12,7 +12,7 @@ import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ITokenPayload } from '../utils/types';
 
 import { ServerErrorException } from '../exceptions/server.exception';
-import { UserDto } from '../user/dto/user.dto';
+import { CreateUserDto, UserDto } from '../user/dto/user.dto';
 import { UserNotFoundException } from '../exceptions/notFound.exception';
 
 @Injectable()
@@ -34,15 +34,27 @@ export class AuthService {
     'JWT_VALID_TIME',
   ) as string;
 
+  public async registerUser(user: CreateUserDto) {
+    try {
+      const { password } = user;
+
+      user.password = (await this.hashPassword(password)) as string;
+
+      return this.userService.createUser(user);
+    } catch (error) {}
+  }
+
   public async validateUser(email: string, password: string) {
     try {
-      const user = (await this.userService.getUserByEmail(email)) as User;
+      const user = await this.userService.getUserByEmail(email);
 
-      console.log(user);
+      if (!user) {
+        throw new UserNotFoundException(email);
+      }
 
       const isPasswordMatching = await this.verifyPassword(
         password,
-        user.password,
+        user.password!,
       );
 
       if (!isPasswordMatching) {
@@ -51,6 +63,7 @@ export class AuthService {
 
       return user;
     } catch (error) {
+      console.error(error);
       throw error;
     }
   }
@@ -70,7 +83,7 @@ export class AuthService {
   }
 
   /** Verifies a JWT and returns the user.
-   * Throws a web socket error if token is invalid or user is not found
+   * returns null if token is invalid or user is not found
    */
   public async verifyTokenForSocket(token: string): Promise<UserDto | null> {
     try {
@@ -86,7 +99,7 @@ export class AuthService {
 
       return await this.userService.getUserByEmail(email);
     } catch (error) {
-      throw error;
+      return null;
     }
   }
 

@@ -10,6 +10,7 @@ import { PagedTaskDto } from '../utils/types';
 import getPaginationOffset from '../utils/pagination';
 
 import { UserRepository } from '../user/user.repository';
+import User from '../user/user.entity';
 
 @Injectable()
 export class TaskRepository {
@@ -31,11 +32,12 @@ export class TaskRepository {
     pageParams: TaskQueryDto,
   ): Promise<PagedTaskDto | void> {
     try {
-      const pageOffset = getPaginationOffset(pageParams);
+      const { pageSize, pageNumber, pageOffset } =
+        getPaginationOffset(pageParams);
 
       const paginationOptions = this.getPaginationOptions(
         userId,
-        pageParams,
+        { pageSize, pageNumber, taskStatus: pageParams.taskStatus },
         pageOffset,
       );
 
@@ -46,12 +48,12 @@ export class TaskRepository {
         this.repo.find({ ...paginationOptions }),
       ]);
 
-      const totalPages = Math.ceil(itemsCount / pageParams.pageSize);
+      const totalPages = Math.ceil(itemsCount / pageSize);
 
       const data: PagedTaskDto = {
         tasks: tasks,
-        currentPage: pageParams.pageNumber,
-        pageSize: pageParams.pageSize,
+        currentPage: pageNumber,
+        pageSize: pageSize,
         totalPages: totalPages,
         totalItems: itemsCount,
         hasNext: pageParams.pageNumber < totalPages,
@@ -67,7 +69,7 @@ export class TaskRepository {
   public async createTask(task: CreateTaskDto) {
     try {
       const { userId } = task;
-      const user = await this.userRepo.getUser(userId);
+      const user = (await this.userRepo.getUser(userId)) as User;
 
       const newTask = this.repo.create({ ...task, user });
 

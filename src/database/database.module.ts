@@ -16,6 +16,7 @@ import User from '../user/user.entity';
 
         // configured for development environments only
         synchronize: configService.get<string>('NODE_ENV') === 'development',
+        // synchronize: false,
 
         // entities configured with TypeOrmModule.forFeature() are loaded
         autoLoadEntities: true,

@@ -1,4 +1,4 @@
-import { FindManyOptions, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import User from './user.entity';
 import { CreateUserDto, UpdateUserDto, UserDto } from './dto/user.dto';
 import { Injectable } from '@nestjs/common';
@@ -7,8 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserAlreadyExistsException } from '../exceptions/badRequest.exception';
 
 import Mapper from '../utils/mapper';
-import { IPagination, PagedUserDto } from '../utils/types';
-import getPaginationOffset from '../utils/pagination';
+
 import { ServerErrorException } from '../exceptions/server.exception';
 
 @Injectable()
@@ -20,43 +19,6 @@ export class UserRepository {
 
   public async getUser(userId: number): Promise<User | null> {
     return (await this.getUserEntity(userId)) as User | null;
-  }
-
-  public async getPagedUsers(
-    pageParams: IPagination,
-  ): Promise<PagedUserDto | void> {
-    try {
-      const pageOffset = getPaginationOffset(pageParams);
-
-      const paginationOptions: FindManyOptions<User> = {
-        skip: pageOffset,
-        take: pageParams.pageSize,
-        order: { firstName: 'ASC' },
-      };
-
-      const [itemsCount, interns] = await Promise.all([
-        // items count
-        this.repo.count(),
-        // data
-        this.repo.find({ ...paginationOptions }),
-      ]);
-
-      const totalPages = Math.ceil(itemsCount / pageParams.pageSize);
-
-      const data: PagedUserDto = {
-        users: interns.map((user) => Mapper.toUserDto(user, false)),
-        currentPage: pageParams.pageNumber,
-        pageSize: pageParams.pageSize,
-        totalPages: totalPages,
-        totalItems: itemsCount,
-        hasNext: pageParams.pageNumber < totalPages,
-        hasPrevious: pageParams.pageNumber > 1,
-      };
-
-      return data;
-    } catch (error) {
-      throw error;
-    }
   }
 
   public async getUserByEmail(email: string): Promise<User | null> {

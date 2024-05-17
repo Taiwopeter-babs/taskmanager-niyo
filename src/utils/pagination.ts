@@ -2,7 +2,16 @@ import { IPagination } from './types';
 
 /** Computes the number of items to skip */
 export default function getPaginationOffset(pageParams: IPagination) {
-  const { pageNumber, pageSize } = pageParams;
+  let { pageNumber, pageSize } = pageParams;
+
+  if (!pageNumber) {
+    pageNumber = 1;
+  }
+
+  if (!pageSize) {
+    pageSize = 10;
+  }
+
   const pageOffset = (pageNumber - 1) * pageSize;
-  return pageOffset;
+  return { pageNumber, pageSize, pageOffset };
 }

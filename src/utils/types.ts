@@ -7,8 +7,8 @@ export interface ICorsConfig {
 }
 
 export interface IPagination {
-  pageNumber: number;
-  pageSize: number;
+  pageNumber?: number;
+  pageSize?: number;
 }
 
 export interface ITaskQuery extends IPagination {

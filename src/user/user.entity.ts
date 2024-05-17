@@ -38,6 +38,13 @@ export default class User extends BaseEntity {
   })
   public email: string;
 
+  @Column({
+    type: 'varchar',
+    length: 128,
+    nullable: false,
+  })
+  public password: string;
+
   @OneToMany(() => Task, (task) => task.user)
   public tasks: Task[];
 
