@@ -29,6 +29,6 @@ async function bootstrap() {
 
   await app.listen(port);
 
-  console.log(`Server and socket are now listening on ports ${port} and 3002`);
+  console.log(`Server and socket are now listening on ${port}`);
 }
 bootstrap();
