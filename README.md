@@ -19,6 +19,8 @@ The REST and Socket APIs are in separate sections, with the request and response
       - [createTask](#createtask)
       - [readAllTasks](#readalltasks)
       - [readTask](#readtask)
+      - [updateTask](#updatetask)
+      - [deleteTask](#deletetask)
 
 ## How To Use
 
