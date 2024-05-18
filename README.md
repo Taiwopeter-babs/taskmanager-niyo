@@ -40,7 +40,7 @@ Note: **Ensure you have docker installed on linux or Docker desktop on windows o
 - ### Clone the repository and install the dependencies
 
 ```bash
-git clone <repo_url>
+git clone https://github.com/Taiwopeter-babs/taskmanager-niyo.git
 
 npm install
 ```
