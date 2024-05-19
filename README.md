@@ -284,7 +284,7 @@ In your API client (POSTMAN OR ANY OTHERS), please ensure that you copy all the 
   }  
   ```
 
-  Default values of 1 and 10 are assigned to `pageNumber` and `pageSize` if undefined.
+  **Default values of 1 and 10 are assigned to `pageNumber` and `pageSize` if undefined. You can filter the tasks by their `isCompleted` field, either `completed` or `pending`, otherwise returns tasks regardless of their status if the `taskStatus` field is `undefined`**
 
   - Response data type for `readAllTasks` event
 
