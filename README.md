@@ -248,7 +248,7 @@ In your API client (POSTMAN OR ANY OTHERS), please ensure that you copy all the 
   }  
   ```
 
-  This event, on completion, streams to clients listening on `createTask` and `readAllTasks` events. The data is paginated for `readAllTasks`, hence only the first 10 tasks are returned on page 1. See [readAllTasks](#readalltasks) for
+  This event, on completion, streams to clients listening on `createTask` and `readAllTasks` events. The data is paginated for `readAllTasks`, hence only the first 10 tasks are returned on page 1. See [readAllTasks](#readalltasks)
 
   - Response data type for `createTask` event
 
