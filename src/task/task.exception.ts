@@ -23,39 +23,43 @@ export class WebsocketExceptionsFilter extends BaseWsExceptionFilter {
     if (exception instanceof HttpException) {
       const error = exception.getResponse();
 
-      console.log(error);
-
       const errorDetails =
-        error instanceof Object ? { ...error } : { message: error };
+        error instanceof Object ? { error: { ...error } } : { error: error };
 
       client.emit('dataError', { event: 'dataError', ...errorDetails });
     }
     const cookies = client.handshake.headers.cookie;
 
     if (!cookies) {
-      client.emit('disconnectionError', 'Unauthorized access');
-      client.disconnect();
+      emitDisconnectionErrorAndDisconnect(client);
     }
 
     const accessToken = getToken(cookies!);
 
     if (!accessToken) {
-      client.emit('disconnectionError', 'Unauthorized access');
-      client.disconnect();
+      emitDisconnectionErrorAndDisconnect(client);
     }
 
     const user = await this.authService.verifyTokenForSocket(accessToken!);
 
     if (!user) {
-      client.emit('disconnectionError', 'Unauthorized access');
-      client.disconnect();
+      emitDisconnectionErrorAndDisconnect(client);
     }
   }
+}
+
+function emitDisconnectionErrorAndDisconnect(client: Socket) {
+  client.emit('disconnectionError', {
+    event: 'disconnectionError',
+    message: 'Unauthorized access',
+  });
+  client.disconnect();
 }
 
 function getToken(cookieString: string) {
   // 'authenticationNiyo' is the name of the cookie.
   /** @see {@link AuthService.getUserloginToken}  */
+
   // only one cookie in the header
   if (!cookieString.includes(';')) {
     return cookieString.includes(constants.cookieName)
@@ -68,8 +72,6 @@ function getToken(cookieString: string) {
     .split('; ')
     .find((cookie: string) => cookie.startsWith(constants.cookieName))
     ?.split('=')[1];
-
-  console.log(accessToken, 'hhhhh');
 
   return accessToken;
 }

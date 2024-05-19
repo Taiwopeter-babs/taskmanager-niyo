@@ -21,6 +21,8 @@ The REST and Socket APIs are in separate sections, with the request and response
       - [readTask](#readtask)
       - [updateTask](#updatetask)
       - [deleteTask](#deletetask)
+      - [dataError](#dataerror)
+      - [disconnectionError](#disconnectionerror)
 
 ## How To Use
 
@@ -413,5 +415,35 @@ In your API client (POSTMAN OR ANY OTHERS), please ensure that you copy all the 
   - Response data type for `readAllTasks`:
 
     See [readAllTasks](#readalltasks) event.
+
+    [Back to content](#content)
+
+- ### `dataError`
+
+  Listen to this event to get error details on message body parameters.
+  
+  - Response
+  
+    ```json
+    {
+      "event": "dataError",
+      "error": "<error_message> or <error_object>"
+    }
+    ```
+
+    [Back to content](#content)
+
+- ### `disconnectionError`
+
+  This event is triggered when a client is not authorized.
+  
+  - Response
+  
+    ```json
+    {
+      "event": "disconnectionError",
+      "error": "Unauthorized access"
+    }
+    ```
 
     [Back to content](#content)
