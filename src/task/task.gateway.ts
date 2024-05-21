@@ -31,13 +31,18 @@ export class TaskGateway implements OnGatewayConnection {
 
   constructor(private readonly taskService: TaskService) {}
 
-  /** first point of contact before any bi-directional communication */
+  /** first point of contact before any bi-directional communication is established */
   async handleConnection(socket: Socket) {
     const user = await this.taskService.getUserFromSocket(socket);
 
-    // disconnects if the client is not authorized
+    // This condition can be removed if the client application restricts task views
+    // to only authorized users.
+
     if (!user) {
-      socket.emit('disconnectionError', 'Unauthorized access');
+      socket.emit('disconnectionError', {
+        event: 'disconnectionError',
+        message: 'Unauthorized access',
+      });
 
       socket.disconnect();
     }
@@ -57,7 +62,19 @@ export class TaskGateway implements OnGatewayConnection {
 
     const newTask = await this.taskService.createTask(data);
 
-    clientSocket.emit('createTask', { ...newTask });
+    if (!newTask) {
+      clientSocket.emit('dataError', {
+        message: 'Task could not be created. User does not exist',
+      });
+      return;
+    }
+
+    const eventObj = {
+      message: 'Task created successfully',
+      task: newTask,
+    };
+
+    clientSocket.emit('createTask', eventObj);
 
     // stream user tasks
     const tasks = await this.taskService.getPagedUserTasks(user!.id, {
@@ -89,7 +106,7 @@ export class TaskGateway implements OnGatewayConnection {
   /**
    * socket method for reading paginated tasks. streams to clients listening on
    * `readAllTasks` pattern. the data is paginated, but the number of results, page number,
-   * and filter query is determined by the client. If no query is provided, the default values
+   * and filter query are determined by the client. If no query is provided, the default values
    * are used.
    */
   @SubscribeMessage('readAllTasks')
@@ -120,8 +137,15 @@ export class TaskGateway implements OnGatewayConnection {
   ) {
     const user = await this.taskService.getUserFromSocket(clientSocket);
 
-    const task = await this.taskService.updateTask(taskId, user!.id, data);
-    clientSocket.emit('updateTask', { ...task });
+    console.log(data, taskId);
+
+    const isUpdated = await this.taskService.updateTask(taskId, user!.id, data);
+
+    const message = isUpdated
+      ? { message: 'Update successful' }
+      : { error: `Task with id ${taskId}, not found` };
+
+    clientSocket.emit('updateTask', message);
 
     // stream user tasks
     const tasks = await this.taskService.getPagedUserTasks(user!.id, {

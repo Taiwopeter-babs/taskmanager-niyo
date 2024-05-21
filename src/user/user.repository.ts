@@ -17,8 +17,11 @@ export class UserRepository {
     private repo: Repository<User>,
   ) {}
 
-  public async getUser(userId: number): Promise<User | null> {
-    return (await this.getUserEntity(userId)) as User | null;
+  public async getUser(
+    userId: number,
+    includeRelation = false,
+  ): Promise<User | null> {
+    return (await this.getUserEntity(userId, includeRelation)) as User | null;
   }
 
   public async getUserByEmail(email: string): Promise<User | null> {
@@ -100,11 +103,14 @@ export class UserRepository {
     }
   }
 
-  private async getUserEntity(userId: number): Promise<User | null> {
+  private async getUserEntity(
+    userId: number,
+    includeRelation = false,
+  ): Promise<User | null> {
     try {
       const user = await this.repo.findOne({
         where: { id: userId },
-        relations: { tasks: true },
+        relations: { tasks: includeRelation },
       });
 
       return user;

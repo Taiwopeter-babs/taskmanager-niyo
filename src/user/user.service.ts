@@ -11,16 +11,19 @@ import { UserRepository } from './user.repository';
 export class UserService {
   constructor(private repo: UserRepository) {}
 
-  public async getUser(userId: number): Promise<UserDto | null> {
-    const user = await this.repo.getUser(userId);
-    console.log(user);
+  public async getUser(
+    userId: number,
+    includeRelation = false,
+  ): Promise<UserDto | null> {
+    const user = await this.repo.getUser(userId, includeRelation);
+
     return user ? Mapper.toUserDto(user, true) : null;
   }
 
   public async getUserByEmail(email: string): Promise<UserDto | null> {
     const user = (await this.repo.getUserByEmail(email)) as User | null;
 
-    return user;
+    return user ? Mapper.toUserDto(user, true) : null;
   }
 
   public async createUser(user: CreateUserDto) {

@@ -35,6 +35,10 @@ export class UpdateTaskDto extends PartialType(BaseTaskDto) {
   @IsOptional()
   @IsEnum(TaskStatus)
   public isCompleted?: TaskStatus;
+
+  @IsNotEmpty()
+  @IsInt()
+  public taskId: number;
 }
 
 /** Dto for task query parameters. All properties are optional */

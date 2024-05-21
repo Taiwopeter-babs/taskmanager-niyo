@@ -8,7 +8,7 @@ import { PagedTaskDto } from '../utils/types';
 import getPaginationOffset from '../utils/pagination';
 
 import { UserRepository } from '../user/user.repository';
-import User from '../user/user.entity';
+// import User from '../user/user.entity';
 
 @Injectable()
 export class TaskRepository {
@@ -19,7 +19,9 @@ export class TaskRepository {
   ) {}
 
   public async getTask(taskId: number, userId: number): Promise<Task | null> {
-    return await this.getTaskEntity(taskId, userId);
+    const task = (await this.getTaskEntity(taskId, userId)) as Task | null;
+
+    return task;
   }
 
   /**
@@ -54,8 +56,8 @@ export class TaskRepository {
         pageSize: pageSize,
         totalPages: totalPages,
         totalItems: itemsCount,
-        hasNext: pageParams.pageNumber < totalPages,
-        hasPrevious: pageParams.pageNumber > 1,
+        hasNext: pageNumber < totalPages,
+        hasPrevious: pageNumber > 1,
       };
 
       return data;
@@ -67,7 +69,12 @@ export class TaskRepository {
   public async createTask(task: CreateTaskDto) {
     try {
       const { userId } = task;
-      const user = (await this.userRepo.getUser(userId)) as User;
+
+      const user = await this.userRepo.getUser(userId, false);
+
+      if (!user) {
+        return null;
+      }
 
       const newTask = this.repo.create({ ...task, user });
 
@@ -82,7 +89,11 @@ export class TaskRepository {
 
   public async updateTask(taskId: number, userId: number, data: UpdateTaskDto) {
     try {
-      await this.getTaskEntity(taskId, userId);
+      const task = await this.getTaskEntity(taskId, userId);
+
+      if (!task) {
+        return false;
+      }
 
       const updateData = {
         title: data.title,
@@ -90,9 +101,9 @@ export class TaskRepository {
         isCompleted: data.isCompleted,
       } as unknown as Task;
 
-      const updatedTask = await this.repo.update(taskId, { ...updateData });
+      await this.repo.update(taskId, { ...updateData });
 
-      return updatedTask;
+      return true;
     } catch (error) {
       throw error;
     }
@@ -119,17 +130,24 @@ export class TaskRepository {
     }
   }
 
-  private async getTaskEntity(
-    taskId: number,
-    userId: number,
-  ): Promise<Task | null> {
+  private async getTaskEntity(taskId: number, userId: number) {
     try {
       const task = await this.repo.findOne({
         where: { id: taskId, userId: userId },
         relations: { user: true },
       });
 
-      return task;
+      if (!task) return null;
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { user, ...rest } = task;
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...userObj } = task.user;
+
+      const taskObj = { ...rest, user: userObj };
+
+      return taskObj;
     } catch (error) {
       throw error;
     }

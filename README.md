@@ -1,6 +1,6 @@
-# Niyo Group Backend Developer Assessment Documentation
+# Task Manager Documentation
 
-Welcome to the documentation for the backend developer assessment. Please ensure that all the instructions for using the API (REST and Socket) are carefully read and followed.
+Welcome to the documentation task manager api. Please ensure that all the instructions for using the API (REST and Socket) are carefully read and followed.
 
 The REST and Socket APIs are in separate sections, with the request and response body parameters for each specified.
 

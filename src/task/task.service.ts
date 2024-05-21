@@ -5,7 +5,6 @@ import { TaskRepository } from './task.repository';
 import Task from './task.entity';
 import { CreateTaskDto, TaskQueryDto, UpdateTaskDto } from './dto/task.dto';
 
-import { UpdateResult } from 'typeorm';
 import { PagedTaskDto } from '../utils/types';
 import { Socket } from 'socket.io';
 import constants from '../auth/constants';
@@ -32,20 +31,27 @@ export class TaskService {
     return tasks as PagedTaskDto;
   }
 
-  public async createTask(task: CreateTaskDto): Promise<Task> {
+  public async createTask(
+    task: CreateTaskDto,
+  ): Promise<Omit<Task, 'user'> | null> {
     const newTask = await this.taskRepo.createTask(task);
 
-    return newTask;
+    if (!newTask) {
+      return null;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { user, ...rest } = newTask;
+
+    return rest;
   }
 
   public async updateTask(
     taskId: number,
     userId: number,
     data: UpdateTaskDto,
-  ): Promise<UpdateResult> {
-    const updatedTask = await this.taskRepo.updateTask(taskId, userId, data);
-
-    return updatedTask;
+  ): Promise<boolean> {
+    return await this.taskRepo.updateTask(taskId, userId, data);
   }
 
   public async deleteTask(taskId: number, userId: number): Promise<boolean> {

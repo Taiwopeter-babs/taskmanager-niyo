@@ -24,7 +24,7 @@ export class UserController {
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   public async getUser(@Param('id', ParseIntPipe) id: number) {
-    const user = await this.userService.getUser(id);
+    const user = await this.userService.getUser(id, true);
 
     if (!user) {
       throw new UserNotFoundException(id);
